@@ -1,18 +1,20 @@
 import os
 import sys
 
-from pyaxidraw import axidraw
+# from pyaxidraw import axidraw
+from nextdraw import NextDraw
 
-print('starting move tool. Press enter after each command')
+
+print('Starting move tool. Press enter after each command')
 print('Arrows - move')
 print('Space - pen up/down')
 print('Q - quit')
 
 python_version = sys.version_info[0]
-#print("python version: "+str(python_version))
+# print("python version: "+str(python_version))
 
 keep_going = True
-move_dist = 0.01
+move_dist = 10.0
 pen_down_height = 42
 pen_down = False
 
@@ -42,20 +44,21 @@ print("move dist "+str(move_dist))
 print("pen down height "+str(pen_down_height))
 
 #connect axidraw
-ad = axidraw.AxiDraw()
-ad.interactive()
-connected = ad.connect()
+nd1 = NextDraw()
+nd1.interactive()
+nd1.options.model=10  # Bantam Tools NextDraw™ 2234
 
-if not connected:
+if not nd1.connect():         # Open serial port to NextDraw;
     print("not connected")
-    sys.exit()
+    quit()
 
-ad.options.model=2  #AxiDraw V3/A3
-ad.options.pen_pos_down = pen_down_height
-ad.update() #set the options
+nd1.options.units=2 # mm
+nd1.options.pen_pos_down = pen_down_height
+# nd1.options.mode = "utility"
 
-ad.penup()
+nd1.update() # set the options
 
+nd1.penup()
 
 while(keep_going):
     if python_version >= 3:
@@ -70,30 +73,30 @@ while(keep_going):
         print("space")
         pen_down = not pen_down
         if pen_down:
-            ad.pendown()
+            nd1.pendown()
         else:
-            ad.penup()
+            nd1.penup()
 
     if inp == 'h':
-        ad.penup()
-        ad.goto(0,0)
+        nd1.penup()
+        nd1.goto(0,0)
 
     #check for arrows by converting chars to int
     if ord(inp[0]) == 27:
         #up
         if ord(inp[2]) == 65:
-            ad.go(0,-move_dist)
+            nd1.go(0,-move_dist)
 
         #down
         if ord(inp[2]) == 66:\
-            ad.go(0,move_dist)
+            nd1.go(0,move_dist)
 
         #right
         if ord(inp[2]) == 67:
-            ad.go(move_dist,0)
+            nd1.go(move_dist,0)
 
         #left
         if ord(inp[2]) == 68:
-            ad.go(-move_dist,0)
+            nd1.go(-move_dist,0)
 
-    
+nd1.disconnect()

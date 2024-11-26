@@ -1,13 +1,24 @@
-# axidraw_gcode_reader
+# NextDraw GCode Reader
 
-This repo consists of 2 python scripts to help me use my AxiDraw plotter with G-code files and a few demo g-code files.
+Adapted from `andymasteroffish/axidraw_gcode_reader`
 
-I use these on a Raspberry Pi 3 that I keep next to my plotter. They have not been thoroughly tested in any other environment.
+This repo consists of 2 python scripts to help me use my NextDraw 2234 plotter with G-code files.
 
+```
+python -m pip install https://software-download.bantamtools.com/nd/api/nextdraw_api.zip
+```
+
+https://bantam.tools/nd_py/#options-interactive
+
+---
+
+---
+
+~ Here down is original readme ~
 
 ## reader.py
 
-This is the main script. It reads g-code and converts it to commands the AxiDraw can recognize. 
+This is the main script. It reads g-code and converts it to commands the AxiDraw can recognize.
 
 It requires one argument: the g-code file you want to plot
 
@@ -15,23 +26,23 @@ It requires one argument: the g-code file you want to plot
 
 There are several optional arguments. Unless the default value is n/a they need to be followed with a numerical value
 
-Flag 			| Default Value | Description
---------- 		| ---------		| -----------
--s or -speed 	| 25			| pen down speed
--up_speed 		| 75			| pen up speed
--const 			| n/a 			| move at constant speed (by default the pen will speed up towards the maximum on long strokes)
--pos_down 		| 45			| pen down height (0-100)  (lower numbers = lower pen)
--d 				| 0 			| pen up delay in millis (-500, 500). How long to wait when raising the pen before it starts moving
--scale 			| 1				| multiplier for print scale
--c or -copies	| 1				| number of copies (horizontally)
--cs 			| 2.7 			| copy spacing (horizontally in inches)
--text 			| n/a 			| slow setting for text (overrides -s, -up_speed, -pos_down, -pen_up_delay)
--h or -help		| n/a 			| help (prints all of the arguments)
+| Flag          | Default Value | Description                                                                                       |
+| ------------- | ------------- | ------------------------------------------------------------------------------------------------- |
+| -s or -speed  | 25            | pen down speed                                                                                    |
+| -up_speed     | 75            | pen up speed                                                                                      |
+| -const        | n/a           | move at constant speed (by default the pen will speed up towards the maximum on long strokes)     |
+| -pos_down     | 45            | pen down height (0-100) (lower numbers = lower pen)                                               |
+| -d            | 0             | pen up delay in millis (-500, 500). How long to wait when raising the pen before it starts moving |
+| -scale        | 1             | multiplier for print scale                                                                        |
+| -c or -copies | 1             | number of copies (horizontally)                                                                   |
+| -cs           | 2.7           | copy spacing (horizontally in inches)                                                             |
+| -text         | n/a           | slow setting for text (overrides -s, -up_speed, -pos_down, -pen_up_delay)                         |
+| -h or -help   | n/a           | help (prints all of the arguments)                                                                |
 
 By and large, these corespond exactly to values in the AxiDraw library
 https://axidraw.com/doc/py_api/#options-general
 
-For example, to draw that same file at a constant speed and with a slower speed I might use 
+For example, to draw that same file at a constant speed and with a slower speed I might use
 
 `python reader.py simple_test.nc -s 15 -const`
 
@@ -55,18 +66,18 @@ Be aware that when you first turn it on, you will only be able to move down and 
 
 mover.py has a few optional arguments
 
-Flag 			| Default Value | Description
----- 			| ------------- | -----------
--d 				| 0.01			| how far to move with each keystroke (in inches)
--pos_down 		| 45			| pen down height
--h 				| n/a 			| prints help info
-
+| Flag      | Default Value | Description                                     |
+| --------- | ------------- | ----------------------------------------------- |
+| -d        | 0.01          | how far to move with each keystroke (in inches) |
+| -pos_down | 45            | pen down height                                 |
+| -h        | n/a           | prints help info                                |
 
 ## Trying it out
 
 There are two exmaple files in this repo that you can try plotting:
-* simple_test.nc (roughly 1" by 5")
-* text_test.nc (roughly 2.5" by 1")
+
+- simple_test.nc (roughly 1" by 5")
+- text_test.nc (roughly 2.5" by 1")
 
 ## Generating G-code
 
