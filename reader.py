@@ -24,7 +24,8 @@ import sys
 import time
 
 
-from pyaxidraw import axidraw
+# from pyaxidraw import axidraw
+from nextdraw import NextDraw
 
 #values
 file_name = "NONE"
@@ -40,7 +41,7 @@ use_const_speed = False
 pen_up_delay = 100
 
 #https://axidraw.com/doc/py_api/#pen_rate_lower
-pen_rate_lower = 50
+pen_rate_lower = 20
 pen_rate_raise = 75
 
 num_copies = 1
@@ -181,26 +182,26 @@ file = open(file_name)
 file_lines = file.readlines()
 print("lines: ",len(file_lines))
 
-ad = axidraw.AxiDraw()
-ad.interactive()
-connected = ad.connect()
+nd1 = NextDraw()
+nd1.interactive()
+nd1.options.model=10  # Bantam Tools NextDraw™ 2234
 
-if not connected:
-	print("not connected")
-	sys.exit()
+if not nd1.connect():         # Open serial port to NextDraw;
+    print("not connected")
+    quit()
 
-ad.options.model=2	#AxiDraw V3/A3
-ad.options.speed_pendown = pen_down_speed
-ad.options.speed_penup = pen_up_speed
-ad.options.const_speed = use_const_speed
-ad.options.pen_pos_down = pen_down_height
-ad.options.pen_delay_up = pen_up_delay
-ad.options.pen_rate_lower = pen_rate_lower
-ad.options.pen_rate_raise = pen_rate_raise
+nd1.options.units=2 # mm
+nd1.options.speed_pendown = pen_down_speed
+nd1.options.speed_penup = pen_up_speed
+nd1.options.const_speed = use_const_speed
+nd1.options.pen_pos_down = pen_down_height
+nd1.options.pen_delay_up = pen_up_delay
+nd1.options.pen_rate_lower = pen_rate_lower
+nd1.options.pen_rate_raise = pen_rate_raise
 
-ad.update() #set the options
+nd1.update() # set the options
 
-ad.penup()
+nd1.penup()
 
 start_time = time.time()
 
@@ -223,19 +224,19 @@ for copy_id in range(0, num_copies):
 
 		#print(this_line[0:-1])	#chopping off the last character because it is a newlien char
 
-		cmd = this_line[0:2]
+		cmd = this_line[0:3]
+		print(cmd)
 
-		if cmd == "M3":
-			val = int(this_line[4:])		#get the string to the end of the string and converts to int
-			#print(" val:",val)
-			pen_down = val > 0
-			if pen_down:
-				ad.pendown()
-			else:
-				ad.penup()
-			#print(" pen down: ",pen_down)
+		
+		if cmd == "M3 " or cmd == "M03":
+			nd1.pendown()
 
-		if cmd == "G0" or cmd == "G1":
+		if cmd == "M5 " or cmd == "M05":
+			nd1.penup()
+
+		# TODO: G4 Pxxx - pause for xxx milliseconds
+
+		if cmd == "G0 " or cmd == "G1 ":
 			#we need X and Y
 			x_index = this_line.find("X")
 			y_index = this_line.find("Y")
@@ -244,9 +245,9 @@ for copy_id in range(0, num_copies):
 			while this_line[end_index] != " " and end_index < len(this_line)-1:
 				end_index += 1
 
-			#print(" x index: ",x_index)
-			#print(" y index: ",y_index)
-			#print(" end index: ",end_index)
+			print(" x index: ",x_index)
+			print(" y index: ",y_index)
+			print(" end index: ",end_index)
 
 			x_val_s = this_line[x_index+1:y_index-1]
 			y_val_s = this_line[y_index+1:end_index]
@@ -257,15 +258,14 @@ for copy_id in range(0, num_copies):
 			#print(" x val: ",x_val)
 			#print(" y val: ",y_val)
 
-			ad.goto(x_val+x_offset, y_val)
+			nd1.goto(x_val+x_offset, y_val)
 
-		#print(cmd)
 
 	#cleanup
-	ad.penup()
+	nd1.penup()
 	
-ad.moveto(0,0)
-ad.disconnect()
+nd1.moveto(0,0)
+nd1.disconnect()
 
 
 

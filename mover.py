@@ -15,6 +15,7 @@ python_version = sys.version_info[0]
 
 keep_going = True
 move_dist = 10.0
+pen_up_height = 75
 pen_down_height = 42
 pen_down = False
 
@@ -54,7 +55,7 @@ if not nd1.connect():         # Open serial port to NextDraw;
 
 nd1.options.units=2 # mm
 nd1.options.pen_pos_down = pen_down_height
-# nd1.options.mode = "utility"
+nd1.options.pen_pos_up = pen_up_height
 
 nd1.update() # set the options
 
