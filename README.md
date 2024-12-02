@@ -5,10 +5,21 @@ Adapted from `andymasteroffish/axidraw_gcode_reader`
 This repo consists of 2 python scripts to help me use my NextDraw 2234 plotter with G-code files.
 
 ```
-python -m pip install https://software-download.bantamtools.com/nd/api/nextdraw_api.zip
+python3 -m pip install https://software-download.bantamtools.com/nd/api/nextdraw_api.zip
 ```
 
 https://bantam.tools/nd_py/#options-interactive
+
+## example usage
+
+```
+python3 reader.py ~/Projects/canvas-gcode/gcode/boids12-forcefield.nc -speed 10 -d 50 -scale 1
+```
+
+Scale 1 = A4  
+Scale 2 = A3  
+Scale 3 = A2  
+Scale 4 = A1
 
 ---
 

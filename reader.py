@@ -22,6 +22,7 @@ G0 X# Y# - go to the given point a fast as possible (not sure you need this eith
 
 import sys
 import time
+import re
 
 
 # from pyaxidraw import axidraw
@@ -88,9 +89,9 @@ def seconds2time(raw):
 
 	sec_s = str(int(seconds))
 	if seconds < 10:
-		sec_s = "0"+str(int(seconds))
+		sec_s = "0" + str(int(seconds))
 
-	return str(hours)+":"+min_s+":"+sec_s
+	return str(hours) + ":" + min_s + ":" + sec_s
 
 	
 #get arguments
@@ -103,13 +104,13 @@ if (len(sys.argv) >= 2):
 		print_arguments()
 		sys.exit();
 
-	print("opening ",file_name)
+	print("opening ", file_name)
 
 	#after that it could be a mix of commands
-	i=2
+	i = 2
 	while i < len(sys.argv):
 		arg = sys.argv[i]
-		if (i<len(sys.argv)-1):
+		if (i < len(sys.argv) - 1):
 			val = sys.argv[i+1]
 		i += 2
 		#print("arg:",arg,"  val:",val)
@@ -134,7 +135,7 @@ if (len(sys.argv) >= 2):
 
 		elif arg == "-const":
 			use_const_speed = True
-			i-=1	#no value for this option
+			i -= 1	#no value for this option
 
 		elif arg == "-d":
 			pen_up_delay = int(val)
@@ -153,7 +154,7 @@ if (len(sys.argv) >= 2):
 
 		elif arg == "-hp":
 			show_progress = False
-			i-=1	#no value for this option
+			i -= 1	#no value for this option
 
 		elif arg == "-h" or arg == "-help":
 			print_arguments()
@@ -177,6 +178,40 @@ print("pen rate lower: ",pen_rate_lower)
 print("copies: ",num_copies)
 print("copies spacing: ",copies_spacing)
 
+
+def parse_gcode_line(line):
+	# Remove comments (text within parentheses)
+	line_without_comments = re.sub(r'\(.*?\)', '', line).strip()
+
+	# If line is empty after removing comments, return None
+	if not line_without_comments:
+		return None
+
+	# Split the line into parts
+	parts = line_without_comments.split()
+
+	# Extract the command (first part)
+	if not parts:
+		return None
+
+	command = parts[0]
+
+	# Create a dictionary to store parameters
+	params = {"command": command}
+
+	# Parse remaining parameters
+	for part in parts[1:]:
+		# Match parameter with its value (e.g., P250, X281)
+		match = re.match(r'([A-Z])(\d+(?:\.\d+)?)', part)
+		if match:
+			param_name = match.group(1)
+			param_value = float(match.group(2))
+			params[param_name] = param_value
+	
+	return params
+
+
+
 #do our thing
 file = open(file_name)
 file_lines = file.readlines()
@@ -184,11 +219,11 @@ print("lines: ",len(file_lines))
 
 nd1 = NextDraw()
 nd1.interactive()
-nd1.options.model=10  # Bantam Tools NextDraw™ 2234
+nd1.options.model = 10  # Bantam Tools NextDraw™ 2234
 
 if not nd1.connect():         # Open serial port to NextDraw;
-    print("not connected")
-    quit()
+	print("not connected")
+	quit()
 
 nd1.options.units=2 # mm
 nd1.options.speed_pendown = pen_down_speed
@@ -214,49 +249,37 @@ for copy_id in range(0, num_copies):
 
 	for this_line in file_lines:
 		line_count += 1
-		prc = float(line_count)/float(len(file_lines) * num_copies)
+		prc = float(line_count) / float(len(file_lines) * num_copies)
 		elapsed_time = time.time() - start_time
 		time_left = (elapsed_time / prc) - elapsed_time
 
-		progress_str = str( int(prc*100))
+		progress_str = str(int(prc*100))
 		if show_progress:
-			print ("progress: "+progress_str+"  time: "+seconds2time(elapsed_time)+"  estimated time left: "+seconds2time(time_left))
+			print ("progress: " + progress_str + "  time: " + seconds2time(elapsed_time) + "  estimated time left: " + seconds2time(time_left))
 
 		#print(this_line[0:-1])	#chopping off the last character because it is a newlien char
 
-		cmd = this_line[0:3]
-		print(cmd)
+		params = parse_gcode_line(this_line)
 
+		if params == None:
+			continue
+
+		cmd = params["command"]
 		
-		if cmd == "M3 " or cmd == "M03":
+		if cmd == "M3" or cmd == "M03":
 			nd1.pendown()
 
-		if cmd == "M5 " or cmd == "M05":
+		if cmd == "M5" or cmd == "M05":
 			nd1.penup()
 
-		# TODO: G4 Pxxx - pause for xxx milliseconds
+		if cmd == "G4" or cmd == "G04":
+			ms = params["P"]
+			time.sleep(ms/1000)
 
-		if cmd == "G0 " or cmd == "G1 ":
+		if cmd == "G0" or cmd == "G1":
 			#we need X and Y
-			x_index = this_line.find("X")
-			y_index = this_line.find("Y")
-			end_index = y_index
-
-			while this_line[end_index] != " " and end_index < len(this_line)-1:
-				end_index += 1
-
-			print(" x index: ",x_index)
-			print(" y index: ",y_index)
-			print(" end index: ",end_index)
-
-			x_val_s = this_line[x_index+1:y_index-1]
-			y_val_s = this_line[y_index+1:end_index]
-			#print(" x val_s: ",x_val_s)
-			#print(" y val_s: ",y_val_s)
-			x_val = float(x_val_s) * scale_factor
-			y_val = float(y_val_s) * scale_factor
-			#print(" x val: ",x_val)
-			#print(" y val: ",y_val)
+			x_val = params["X"]
+			y_val = params["Y"]
 
 			nd1.goto(x_val+x_offset, y_val)
 
