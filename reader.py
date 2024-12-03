@@ -1,25 +1,3 @@
-'''
-https://axidraw.com/doc/py_api/
-
-#TODO
-[X] show percentage complete
-[X] scaling options
-[ ] a way to pause
-[X] show times in HH:MM:SS
-
-
-
-Commands to read:
-
-M3 S# - set the pen height. 0 is up, 100 is max down (60 is probably better)
-	(for this, I think anything above 0 can just be down)
-G1 X# Y# - go to the given point
-G0 X# Y# - go to the given point a fast as possible (not sure you need this either)
-
-'''
-
-
-
 import sys
 import time
 import re
@@ -64,10 +42,10 @@ def print_arguments():
 	print("-acc : acceleration (1 - 100)")
 	print("-s : drawing speed (1 - 100)")
 	print("-m : moving speed (1 - 100)")
-	print("-pds : pen down speed (1 - 100)")
 	print("-pdh : pen down height (0 - 100)  (lower numbers = lower pen, default 42)")
+	print("-pds : pen down speed (1 - 100)")
+	print("-puh : pen up height (0 - 100)  (lower numbers = lower pen, default 60)")
 	print("-pus : pen up speed (1 - 100)")
-	print("-pud : pen up delay in millis (-500 - 500)")
 	
 	print("-hp : hide progress text")
 	print("-h : help")
@@ -195,7 +173,7 @@ def parseGCodeLine(line):
 	# Parse remaining parameters
 	for part in parts[1:]:
 		# Match parameter with its value (e.g., P250, X281)
-		match = re.match(r'([A-Z])(\d+(?:\.\d+)?)', part)
+		match = re.match(r'([A-Z])(-?\d+(?:\.\d+)?)', part)
 		if match:
 			paramName = match.group(1)
 			paramValue = float(match.group(2))
@@ -254,8 +232,6 @@ for this_line in fileLines:
 	progressStr = str(int(prc*100))
 	if showProgress:
 		print ("progress: " + progressStr + "  time: " + seconds2time(elapsedTime) + "  estimated time left: " + seconds2time(timeLeft))
-
-	#print(this_line[0:-1])	#chopping off the last character because it is a newlien char
 
 	params = parseGCodeLine(this_line)
 
