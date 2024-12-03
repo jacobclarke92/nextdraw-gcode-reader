@@ -28,42 +28,49 @@ import re
 # from pyaxidraw import axidraw
 from nextdraw import NextDraw
 
+#defaults
+defaultAcceleration = 50
+defaultDrawingSpeed = 60
+defaultMovingSpeed = 85
+defaultPenDownHeight = 42
+defaultPenDownSpeed = 10
+defaultPenUpHeight = 60
+defaultPenUpSpeed = 30
+
 #values
-file_name = "NONE"
-scale_factor = 1
+fileName = "NONE"
+scaleFactor = 1
 
-#https://axidraw.com/doc/py_api/#speed_pendown
-pen_down_speed = 25
-pen_up_speed = 75
-pen_down_height = 42  #axidraw default is 40
-#https://axidraw.com/doc/py_api/#const_speed
-use_const_speed = False
-#https://axidraw.com/doc/py_api/#pen_delay_up
-pen_up_delay = 100
+penDownHeight = defaultPenDownHeight  	# https://bantam.tools/nd_py/#pen_pos_down
+penDownSpeed = defaultPenDownSpeed		# https://bantam.tools/nd_py/#pen_rate_lower
+penUpHeight = defaultPenUpHeight		# https://bantam.tools/nd_py/#pen_pos_up
+penUpSpeed = defaultPenUpSpeed			# https://bantam.tools/nd_py/#pen_rate_raise
 
-#https://axidraw.com/doc/py_api/#pen_rate_lower
-pen_rate_lower = 20
-pen_rate_raise = 75
+acceleration = defaultAcceleration 		# https://bantam.tools/nd_py/#accel
+drawingSpeed = defaultDrawingSpeed		# https://bantam.tools/nd_py/#speed_pendown
+movingSpeed = defaultMovingSpeed		# https://bantam.tools/nd_py/#speed_penup
 
-num_copies = 1
-copies_spacing = 2.7
+handling = 0			# https://bantam.tools/nd_py/#handling
+# 1 - Technical drawing.
+# 2 - Handwriting
+# 3 - Sketching
+# 4 - Constant speed
 
-show_progress = True
+showProgress = True
 
 def print_arguments():
-	print("-scale : multiplier for print scale")
-	print("-s or -speed : pen down speed")
-	print("-up_speed : pen up speed")
-	print("-const : move at constant speed")
-	print("-pos_down : pen down height (0-100)  (lower numbers = lower pen, default 45)")
-	print("-c or -copies: number of copies (horizontally)")
-	print("-cs : copy spacing (horizontally in inches)")
-	print("-text : slow setting for text (overrides -s, -up_speed, -pos_down, -pen_up_delay)")
-	print("-d : pen up delay in millis (-500, 500)")
-	print("-rl pen rate lower (1 to 100")
-	print("-rr pen rate raise (1 to 100")
-	print("-hp hide progress text")
-	print("-h or -help: help")
+	print("-scale : multiplier for print scale (1=A4, 2=A3, etc)")
+	print("-mode : handling mode (1-4) overwrites values for acc, s, m")
+	print("-acc : acceleration (1 - 100)")
+	print("-s : drawing speed (1 - 100)")
+	print("-m : moving speed (1 - 100)")
+	print("-pds : pen down speed (1 - 100)")
+	print("-pdh : pen down height (0 - 100)  (lower numbers = lower pen, default 42)")
+	print("-pus : pen up speed (1 - 100)")
+	print("-pud : pen up delay in millis (-500 - 500)")
+	
+	print("-hp : hide progress text")
+	print("-h : help")
 
 
 def seconds2time(raw):
@@ -97,14 +104,14 @@ def seconds2time(raw):
 #get arguments
 if (len(sys.argv) >= 2):
 
-	#first argument should always be file name
-	file_name = sys.argv[1]
+	# first argument should always be file name
+	fileName = sys.argv[1]
 
-	if file_name == '-h' or file_name == '-help':
+	if fileName == '-h' or fileName == '-help':
 		print_arguments()
 		sys.exit();
 
-	print("opening ", file_name)
+	print("opening ", fileName)
 
 	#after that it could be a mix of commands
 	i = 2
@@ -115,80 +122,66 @@ if (len(sys.argv) >= 2):
 		i += 2
 		#print("arg:",arg,"  val:",val)
 		if arg == "-scale":
-			scale_factor = float(val)
+			scaleFactor = float(val)
 
-		elif arg == "-text":
-			pen_down_speed = 3
-			pen_up_speed = 10
-			pen_down_height = 43
-			pen_up_delay = 100
-			i -= 1
+		elif arg == "-mode":
+			handling = int(val)
 
-		elif arg == "-s" or arg == "-speed":
-			pen_down_speed = float(val)
+		elif arg == "-acc":
+			acceleration = float(val)
 
-		elif arg == "-up_speed":
-			pen_up_speed = float(val)
+		elif arg == "-s":
+			drawingSpeed = float(val)
+		
+		elif arg == "-m":
+			movingSpeed = float(val)
 
-		elif arg == "-pos_down":
-			pen_down_height = float(val)
+		elif arg == "-pds":
+			penDownSpeed = float(val)
 
-		elif arg == "-const":
-			use_const_speed = True
-			i -= 1	#no value for this option
+		elif arg == "-pus":
+			penUpSpeed = float(val)
 
-		elif arg == "-d":
-			pen_up_delay = int(val)
-
-		elif arg == "-rl":
-			pen_rate_lower = int(val)
-
-		elif arg == "-rr":
-			pen_rate_raise = int(val)
-
-		elif arg == "-c" or arg == "-copeis":
-			num_copies = int(val)
-
-		elif arg == "-cs":
-			copies_spacing = float(val)
+		elif arg == "-pdh":
+			penDownHeight = float(val)
+		
+		elif arg == "-puh":
+			penUpHeight = float(val)
 
 		elif arg == "-hp":
-			show_progress = False
+			showProgress = False
 			i -= 1	#no value for this option
 
 		elif arg == "-h" or arg == "-help":
 			print_arguments()
 			sys.exit();
 
-		
-
 		else:
 			print("i don't know this command:",arg)
 			sys.exit();
 		
 
-print("scale: ",scale_factor)
-print("pen down speed: ",pen_down_speed)
-print("pen up speed: ",pen_up_speed)
-print("use constant speed: ",use_const_speed)
-print("pen down height: ",pen_down_height)
-print("pen up delay: ",pen_up_delay)
-print("pen rate raise: ",pen_rate_raise)
-print("pen rate lower: ",pen_rate_lower)
-print("copies: ",num_copies)
-print("copies spacing: ",copies_spacing)
+print("scale: ", scaleFactor)
+print("handling mode: ", handling)
+print("acceleration: ", acceleration)
+print("drawing speed: ", drawingSpeed)
+print("moving speed: ", movingSpeed)
+print("pen down speed: ", penDownSpeed)
+print("pen down height: ", penDownHeight)
+print("pen up speed: ", penUpSpeed)
+print("pen up height: ", penUpHeight)
 
 
-def parse_gcode_line(line):
+def parseGCodeLine(line):
 	# Remove comments (text within parentheses)
-	line_without_comments = re.sub(r'\(.*?\)', '', line).strip()
+	lineWithoutComments = re.sub(r'\(.*?\)', '', line).strip()
 
 	# If line is empty after removing comments, return None
-	if not line_without_comments:
+	if not lineWithoutComments:
 		return None
 
 	# Split the line into parts
-	parts = line_without_comments.split()
+	parts = lineWithoutComments.split()
 
 	# Extract the command (first part)
 	if not parts:
@@ -204,88 +197,93 @@ def parse_gcode_line(line):
 		# Match parameter with its value (e.g., P250, X281)
 		match = re.match(r'([A-Z])(\d+(?:\.\d+)?)', part)
 		if match:
-			param_name = match.group(1)
-			param_value = float(match.group(2))
-			params[param_name] = param_value
+			paramName = match.group(1)
+			paramValue = float(match.group(2))
+			params[paramName] = paramValue
 	
 	return params
 
 
 
 #do our thing
-file = open(file_name)
-file_lines = file.readlines()
-print("lines: ",len(file_lines))
+file = open(fileName)
+fileLines = file.readlines()
+print("lines: ", len(fileLines))
 
 nd1 = NextDraw()
 nd1.interactive()
-nd1.options.model = 10  # Bantam Tools NextDraw™ 2234
 
 if not nd1.connect():         # Open serial port to NextDraw;
 	print("not connected")
 	quit()
 
-nd1.options.units=2 # mm
-nd1.options.speed_pendown = pen_down_speed
-nd1.options.speed_penup = pen_up_speed
-nd1.options.const_speed = use_const_speed
-nd1.options.pen_pos_down = pen_down_height
-nd1.options.pen_delay_up = pen_up_delay
-nd1.options.pen_rate_lower = pen_rate_lower
-nd1.options.pen_rate_raise = pen_rate_raise
+nd1.options.model = 10  # Bantam Tools NextDraw™ 2234
+nd1.options.units = 2 # mm
+
+if handling > 0:
+	nd1.options.handling = handling
+	if drawingSpeed != defaultDrawingSpeed:
+		nd1.options.speed_pendown = drawingSpeed
+	if movingSpeed != defaultMovingSpeed:
+		nd1.options.speed_penup = movingSpeed
+	if acceleration != defaultAcceleration:
+		nd1.options.accel = acceleration
+else:
+	nd1.options.accel = acceleration
+	nd1.options.speed_pendown = drawingSpeed
+	nd1.options.speed_penup = movingSpeed
+
+nd1.options.pen_pos_down = penDownHeight
+nd1.options.pen_pos_up = penUpHeight
+nd1.options.pen_rate_lower = penDownSpeed
+nd1.options.pen_rate_raise = penUpSpeed
 
 nd1.update() # set the options
 
 nd1.penup()
-
-start_time = time.time()
-
-pen_down = False
-line_count = 0
-
-for copy_id in range(0, num_copies):
-
-	x_offset = copy_id * copies_spacing
-
-	for this_line in file_lines:
-		line_count += 1
-		prc = float(line_count) / float(len(file_lines) * num_copies)
-		elapsed_time = time.time() - start_time
-		time_left = (elapsed_time / prc) - elapsed_time
-
-		progress_str = str(int(prc*100))
-		if show_progress:
-			print ("progress: " + progress_str + "  time: " + seconds2time(elapsed_time) + "  estimated time left: " + seconds2time(time_left))
-
-		#print(this_line[0:-1])	#chopping off the last character because it is a newlien char
-
-		params = parse_gcode_line(this_line)
-
-		if params == None:
-			continue
-
-		cmd = params["command"]
-		
-		if cmd == "M3" or cmd == "M03":
-			nd1.pendown()
-
-		if cmd == "M5" or cmd == "M05":
-			nd1.penup()
-
-		if cmd == "G4" or cmd == "G04":
-			ms = params["P"]
-			time.sleep(ms/1000)
-
-		if cmd == "G0" or cmd == "G1":
-			#we need X and Y
-			x_val = params["X"]
-			y_val = params["Y"]
-
-			nd1.goto(x_val+x_offset, y_val)
+startTime = time.time()
+lineCount = 0
 
 
-	#cleanup
-	nd1.penup()
+for this_line in fileLines:
+	lineCount += 1
+	prc = float(lineCount) / float(len(fileLines))
+	elapsedTime = time.time() - startTime
+	timeLeft = (elapsedTime / prc) - elapsedTime
+
+	progressStr = str(int(prc*100))
+	if showProgress:
+		print ("progress: " + progressStr + "  time: " + seconds2time(elapsedTime) + "  estimated time left: " + seconds2time(timeLeft))
+
+	#print(this_line[0:-1])	#chopping off the last character because it is a newlien char
+
+	params = parseGCodeLine(this_line)
+
+	if params == None:
+		continue
+
+	cmd = params["command"]
+	
+	if cmd == "M3" or cmd == "M03":
+		nd1.pendown()
+
+	if cmd == "M5" or cmd == "M05":
+		nd1.penup()
+
+	if cmd == "G4" or cmd == "G04":
+		ms = params["P"]
+		time.sleep(ms/1000)
+
+	if cmd == "G0" or cmd == "G1":
+		#we need X and Y
+		xVal = params["X"]
+		yVal = params["Y"]
+
+		nd1.goto(xVal, yVal)
+
+
+#cleanup
+nd1.penup()
 	
 nd1.moveto(0,0)
 nd1.disconnect()
