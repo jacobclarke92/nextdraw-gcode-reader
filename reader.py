@@ -252,8 +252,8 @@ for this_line in fileLines:
 
 	if cmd == "G0" or cmd == "G1":
 		#we need X and Y
-		xVal = params["X"]
-		yVal = params["Y"]
+		xVal = params["X"] * scaleFactor
+		yVal = params["Y"] * scaleFactor
 
 		nd1.goto(xVal, yVal)
 
