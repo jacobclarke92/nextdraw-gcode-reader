@@ -19,6 +19,9 @@ defaultPenUpSpeed = 30
 fileName = "NONE"
 scaleFactor = 1
 
+offsetX = 0
+offsetY = 0
+
 penDownHeight = defaultPenDownHeight  	# https://bantam.tools/nd_py/#pen_pos_down
 penDownSpeed = defaultPenDownSpeed		# https://bantam.tools/nd_py/#pen_rate_lower
 penUpHeight = defaultPenUpHeight		# https://bantam.tools/nd_py/#pen_pos_up
@@ -46,6 +49,8 @@ def print_arguments():
 	print("-pds : pen down speed (1 - 100)")
 	print("-puh : pen up height (0 - 100)  (lower numbers = lower pen, default 60)")
 	print("-pus : pen up speed (1 - 100)")
+	print('-ox : offset x')
+	print('-oy : offset y')
 	
 	print("-hp : hide progress text")
 	print("-h : help")
@@ -129,6 +134,12 @@ if (len(sys.argv) >= 2):
 		elif arg == "-hp":
 			showProgress = False
 			i -= 1	#no value for this option
+
+		elif arg == "-ox":
+			offsetX = float(val)
+
+		elif arg == "-oy":
+			offsetY = float(val)
 
 		elif arg == "-h" or arg == "-help":
 			print_arguments()
@@ -252,8 +263,8 @@ for this_line in fileLines:
 
 	if cmd == "G0" or cmd == "G1":
 		#we need X and Y
-		xVal = params["X"] * scaleFactor
-		yVal = params["Y"] * scaleFactor
+		xVal = offsetX + params["X"] * scaleFactor
+		yVal = offsetY + params["Y"] * scaleFactor
 
 		nd1.goto(xVal, yVal)
 
